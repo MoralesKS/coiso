@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Últimas notícias</h1>
+    <div id="lista"></div>
+
+    <script>
+    async function carregarNoticias() {
+        const resposta = await fetch('/noticias');
+        const noticias = await resposta.json();
+
+        document.getElementById('lista').innerHTML =
+            noticias.map(noticia => `
+                <article>
+                    <h2>${noticia.titulo}</h2>
+                    <p>${noticia.conteudo}</p>
+                </article>
+            `).join('');
+    }
+
+    carregarNoticias();
+    </script>
+</body>
+</html>
