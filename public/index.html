@@ -1,29 +1,179 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Jornal - Laboratório</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f3f3f3;
+        }
+
+        input, textarea {
+            display: block;
+            width: 300px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        article {
+            background: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+
+        .aviso {
+            background: #fff1cc;
+            padding: 12px;
+            border-radius: 8px;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Últimas notícias</h1>
+
+    <h1>Jornal - Laboratório de Segurança</h1>
+
+    <p class="aviso">
+        Ambiente didático local para estudar vulnerabilidades.
+    </p>
+
+    <h2>Cadastrar notícia</h2>
+
+    <form id="formNoticia">
+        <input
+            type="text"
+            id="titulo"
+            placeholder="Título"
+            required
+        >
+
+        <textarea
+            id="conteudo"
+            placeholder="Conteúdo"
+            required
+        ></textarea>
+
+        <button type="submit">Cadastrar</button>
+    </form>
+
+    <p id="mensagem"></p>
+
+    <hr>
+
+    <h2>Pesquisar notícias</h2>
+
+    <input
+        type="text"
+        id="pesquisa"
+        placeholder="Digite o título"
+    >
+
+    <button onclick="buscarNoticias()">Pesquisar</button>
+
+    <button onclick="carregarNoticias()">Mostrar todas</button>
+
     <div id="lista"></div>
 
     <script>
-    async function carregarNoticias() {
-        const resposta = await fetch('/noticias');
-        const noticias = await resposta.json();
 
-        document.getElementById('lista').innerHTML =
-            noticias.map(noticia => `
-                <article>
-                    <h2>${noticia.titulo}</h2>
-                    <p>${noticia.conteudo}</p>
-                </article>
-            `).join('');
-    }
+        // Cadastrar notícia
+        document.getElementById('formNoticia')
+            .addEventListener('submit', async (evento) => {
 
-    carregarNoticias();
+                evento.preventDefault();
+
+                const titulo =
+                    document.getElementById('titulo').value;
+
+                const conteudo =
+                    document.getElementById('conteudo').value;
+
+                const resposta = await fetch('/noticias', {
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        titulo,
+                        conteudo
+                    })
+                });
+
+                const resultado = await resposta.json();
+
+                document.getElementById('mensagem').textContent =
+                    resultado.mensagem || resultado.erro;
+
+                if (resposta.ok) {
+                    document.getElementById('formNoticia').reset();
+                    carregarNoticias();
+                }
+            });
+
+        // Buscar todas as notícias
+        async function carregarNoticias() {
+            const resposta = await fetch('/noticias');
+            const noticias = await resposta.json();
+
+            exibirNoticias(noticias);
+        }
+
+        // Pesquisar pelo título
+        async function buscarNoticias() {
+            const titulo =
+                document.getElementById('pesquisa').value;
+
+            const resposta = await fetch(
+                `/buscar?titulo=${encodeURIComponent(titulo)}`
+            );
+
+            const noticias = await resposta.json();
+
+            exibirNoticias(noticias);
+        }
+
+        // Exibir resultados
+        function exibirNoticias(noticias) {
+            const lista = document.getElementById('lista');
+
+            lista.innerHTML = '';
+
+            if (!Array.isArray(noticias) || noticias.length === 0) {
+                lista.textContent = 'Nenhuma notícia encontrada.';
+                return;
+            }
+
+            noticias.forEach(noticia => {
+                const artigo = document.createElement('article');
+                const titulo = document.createElement('h3');
+                const conteudo = document.createElement('p');
+
+                titulo.textContent = noticia.titulo;
+                conteudo.textContent = noticia.conteudo;
+
+                artigo.appendChild(titulo);
+                artigo.appendChild(conteudo);
+
+                lista.appendChild(artigo);
+            });
+        }
+
+        carregarNoticias();
+
     </script>
+
 </body>
 </html>
